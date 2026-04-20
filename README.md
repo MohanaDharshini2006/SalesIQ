@@ -69,7 +69,9 @@ npm run dev
 
 ---
 
-## License
-Built for the Advanced Track (Track 5) challenge.
+## Credits and Team
+Building for the Advanced Track (Track 5) challenge.
 
-Developed by MohanaDharshini.
+- **Lead Developer:** Dharshini
+- **AI Architecture:** Antigravity 
+- **Platform:** StoreIQ Engine
