@@ -51,11 +51,16 @@ export const updateProduct = async (productId, title, descriptionHtml, seoKeywor
     throw err;
   }
 
-  const payload = { product: { id: productId } };
-  if (title) payload.product.title = title;
-  if (descriptionHtml) payload.product.body_html = descriptionHtml;
-  if (seoKeywords?.length > 0) payload.product.tags = seoKeywords.join(', ');
+  const payload = { 
+    product: { 
+      id: productId,
+      title: title,
+      body_html: descriptionHtml,
+      tags: Array.isArray(seoKeywords) ? seoKeywords.join(', ') : seoKeywords
+    } 
+  };
 
+  console.log(`[Shopify] Syncing "${title}" to Live Store...`);
   const r = await axios.put(`https://${domain}/admin/api/2024-01/products/${productId}.json`, payload, {
     headers: { 'X-Shopify-Access-Token': token, 'Content-Type': 'application/json' }
   });

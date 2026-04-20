@@ -44,6 +44,17 @@ const ChatConcierge = ({ storeData }) => {
     setLoading(true);
 
     try {
+      // Map entire store results including individual pillar scores
+      const storeContext = storeData?.results.map(p => ({
+        title: p.title,
+        overall: p.total_score,
+        completeness: p.scores.completeness,
+        clarity: p.scores.clarity,
+        visibility: p.scores.visibility,
+        trust: p.scores.trust,
+        issues: p.gaps_detected.map(g => g.type)
+      })) || [];
+
       const res = await fetch(`${API}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -52,7 +63,7 @@ const ChatConcierge = ({ storeData }) => {
           context: {
             score: storeData?.store_overall_score || 0,
             count: storeData?.total_products || 0,
-            issues: ['Trust Signals', 'Description Gaps']
+            full_results: storeContext
           }
         })
       });
@@ -335,68 +346,103 @@ export default function App() {
 
       {/* Diagnosis Overlay */}
       {activeProduct && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[150] flex justify-end">
-           <div className="w-[520px] h-full bg-[#090D18] border-l border-white/10 p-12 flex flex-col shadow-[-50px_0_150px_rgba(0,0,0,0.8)] animate-in slide-in-from-right duration-500 ease-out">
-              <div className="flex justify-between items-center mb-12">
-                 <div>
-                    <h2 className="text-xl font-black tracking-[4px] uppercase text-white">AI Diagnostic</h2>
-                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">Neural Pattern Analysis</p>
-                 </div>
-                 <button onClick={() => setActiveProduct(null)} className="p-3 h-12 w-12 text-slate-500 hover:text-white transition-colors bg-white/5 rounded-2xl">{icons.close}</button>
-              </div>
+        <div className="fixed inset-0 bg-[#06080F]/95 backdrop-blur-2xl z-[150] flex justify-center items-center p-12">
+           <div className="w-full max-w-7xl h-full bg-[#090D18] border border-white/10 rounded-[48px] flex overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-500">
               
-              <div className="flex-1 overflow-y-auto space-y-12 pr-4 custom-scrollbar">
-                 <div className="space-y-6">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-[3px]">Current Product State</label>
-                    <div className="p-8 rounded-[32px] bg-white/[0.03] border border-white/10 relative overflow-hidden group">
-                       <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                         <span className="text-6xl">📄</span>
-                       </div>
-                       <h4 className="font-black text-white text-lg tracking-tight mb-4">{activeProduct.title}</h4>
-                       <div className="text-[13px] text-slate-400 leading-relaxed italic prose prose-invert opacity-80" dangerouslySetInnerHTML={{ __html: activeProduct.description }}/>
-                    </div>
-                 </div>
+              {/* Left side: Original & Gaps */}
+              <div className="w-[450px] border-r border-white/5 flex flex-col p-12 bg-white/[0.02]">
+                  <div className="mb-12">
+                    <h2 className="text-2xl font-black tracking-tighter text-white">Neural Diagnosis</h2>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-2 font-mono">Entity ID: {activeProduct.product_id}</p>
+                  </div>
 
-                 <div className="space-y-6">
-                    <label className="text-[10px] font-black text-red-500 uppercase tracking-[3px]">High-Impact Gaps Detetced</label>
-                    <div className="grid grid-cols-1 gap-3">
-                       {activeProduct.gaps_detected.map((g,i) => (
-                         <div key={i} className="p-5 rounded-2xl bg-red-500/[0.03] border border-red-500/10 flex justify-between items-center group hover:bg-red-500/[0.06] transition-all">
-                           <div className="flex items-center gap-4">
-                              <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_10px_#EF4444]"/>
-                              <span className="text-red-100 font-black uppercase tracking-widest text-[10px]">{g.type.replace('_',' ')}</span>
-                           </div>
-                           <span className="text-red-400 font-extrabold text-sm">+{g.impact_score}</span>
-                         </div>
-                       ))}
-                    </div>
-                 </div>
+                  <div className="flex-1 space-y-12 overflow-y-auto pr-4 custom-scrollbar">
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-[4px]">Current State (Low Metric)</label>
+                        <div className="p-8 rounded-3xl bg-white/[0.03] border border-white/10">
+                            <h4 className="font-bold text-white mb-4">{activeProduct.title}</h4>
+                            <div className="text-xs text-slate-400 line-clamp-6 opacity-60 prose prose-invert" dangerouslySetInnerHTML={{ __html: activeProduct.description }}/>
+                        </div>
+                      </div>
 
-                 {fixData && (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                       <div className="flex justify-between items-end">
-                          <label className="text-[10px] font-black text-indigo-400 uppercase tracking-[3px]">AI Optimized Content</label>
-                          <span className="text-[9px] font-black text-green-400 border border-green-400/20 px-2 py-0.5 rounded-full">99% Confidence</span>
-                       </div>
-                       <div className="p-8 rounded-[40px] bg-indigo-500/[0.04] border border-indigo-500/30 space-y-6 border-dashed">
-                          <h4 className="font-black text-white text-base tracking-tight">{fixData.fixed_title}</h4>
-                          <div className="text-[13px] text-indigo-100/70 leading-relaxed prose prose-invert" dangerouslySetInnerHTML={{ __html: fixData.fixed_description }}/>
-                          <div className="flex flex-wrap gap-2 pt-4 border-t border-indigo-500/10">
-                             {fixData.seo_keywords.map((k,i)=>(
-                               <span key={i} className="px-3 py-1.5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-[10px] text-indigo-300 font-black tracking-widest uppercase">#{k}</span>
-                             ))}
-                          </div>
-                       </div>
-                    </div>
-                 )}
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-red-500 uppercase tracking-[4px]">Detected Deviations</label>
+                        <div className="space-y-3">
+                            {activeProduct.gaps_detected.map((g,i) => (
+                              <div key={i} className="p-5 rounded-2xl bg-red-500/5 border border-red-500/10 flex justify-between items-center group">
+                                <span className="text-red-100 font-black uppercase tracking-widest text-[9px]">{g.type.replace('_',' ')}</span>
+                                <span className="text-red-400 font-black text-xs">-{g.impact_score} PTS</span>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                  </div>
               </div>
 
-              <div className="mt-12 pt-8 border-t border-white/5">
-                <button disabled={!fixData} onClick={() => applyFix(activeProduct.product_id, fixData)} className="w-full py-6 rounded-3xl text-[12px] font-black tracking-[6px] text-white transition-all shadow-[0_20px_50px_rgba(99,102,241,0.3)] active:scale-95 disabled:opacity-20 uppercase overflow-hidden relative group" style={{ background: COLORS.primary }}>
-                   <span className="relative z-10">{fixData ? 'Push to Shopify Hub' : 'Analyzing Neural Patterns...'}</span>
-                   <div className="absolute inset-0 bg-white/20 translate-x-full group-hover:translate-x-0 transition-transform duration-500"/>
-                </button>
-                <p className="text-center text-[10px] font-bold text-slate-600 mt-6 uppercase tracking-[1px]">Syncing with storeiq-dev-sy9ldjdy.myshopify.com</p>
+              {/* Center/Right: The Correction Hub */}
+              <div className="flex-1 flex flex-col p-12 relative overflow-hidden bg-gradient-to-br from-[#101525] to-transparent">
+                  <button onClick={() => setActiveProduct(null)} className="absolute top-10 right-10 p-4 text-slate-500 hover:text-white transition-colors bg-white/5 rounded-full z-20">
+                    <span className="w-6 h-6">{icons.close}</span>
+                  </button>
+
+                  <div className="flex-1 flex flex-col items-center justify-center space-y-12">
+                      {!fixData ? (
+                        <div className="flex flex-col items-center gap-8 animate-pulse text-indigo-400">
+                           <div className="w-20 h-20 border-[6px] border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin shadow-[0_0_50px_#6366F122]"/>
+                           <p className="text-[10px] font-black uppercase tracking-[8px] text-center max-w-xs leading-loose">Synthesizing Optimized Metadata for {activeProduct.title}...</p>
+                        </div>
+                      ) : (
+                        <div className="w-full max-w-3xl space-y-10 animate-in fade-in slide-in-from-bottom-10 duration-700">
+                           <div className="flex items-center gap-6">
+                              <div className="w-16 h-16 rounded-2xl bg-green-500/10 flex items-center justify-center text-green-400 font-black border border-green-500/20 shadow-[0_0_30px_#10B98122]">99%</div>
+                              <div>
+                                 <h3 className="text-xl font-black text-white tracking-tight">AI Optimization Approved</h3>
+                                 <p className="text-[10px] text-green-500 font-bold uppercase tracking-widest mt-1 italic">Strategically engineered for LLM recommendation confidence.</p>
+                              </div>
+                           </div>
+
+                           <div className="space-y-8">
+                             <div className="group relative">
+                               <div className="absolute -left-6 top-0 bottom-0 w-1 bg-green-500/0 group-hover:bg-green-500/50 transition-all rounded-full"/>
+                               <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3 block">Enhanced Technical Title</label>
+                               <div className="text-2xl font-black text-white underline decoration-green-500/30 underline-offset-8">{fixData.fixed_title}</div>
+                             </div>
+
+                             <div className="space-y-4">
+                               <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">Neural description Correction (Amazon-Grade)</label>
+                               <div className="p-10 rounded-[40px] bg-white/[0.03] border border-white/5 relative group overflow-hidden">
+                                  <div className="absolute top-0 right-0 p-6 opacity-5 rotate-12">
+                                     <span className="text-8xl">✨</span>
+                                  </div>
+                                  <div className="prose prose-invert prose-indigo text-indigo-100/80 leading-relaxed text-sm max-w-none" dangerouslySetInnerHTML={{ __html: fixData.fixed_description }}/>
+                               </div>
+                             </div>
+
+                             <div className="flex flex-wrap gap-3">
+                                {fixData.seo_keywords.map((k,i)=>(
+                                  <span key={i} className="px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl text-[9px] text-indigo-300 font-black tracking-[2px] uppercase">#{k}</span>
+                                ))}
+                             </div>
+                           </div>
+                        </div>
+                      )}
+                  </div>
+
+                  <div className="pt-12 border-t border-white/5 flex flex-col items-center">
+                      <button 
+                        disabled={!fixData} 
+                        onClick={() => applyFix(activeProduct.product_id, fixData)} 
+                        className="w-full max-w-md py-8 rounded-[32px] text-[13px] font-black tracking-[8px] text-white transition-all shadow-[0_20px_60px_#6366F133] active:scale-95 disabled:opacity-30 uppercase overflow-hidden relative group" 
+                        style={{ background: COLORS.primary }}
+                      >
+                         <span className="relative z-10">{fixData ? 'Sync to Global Store' : 'Finalizing Analysis...'}</span>
+                         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500"/>
+                      </button>
+                      <div className="mt-8 flex items-center gap-4 py-3 px-6 rounded-2xl bg-white/[0.03] border border-white/5 shadow-inner">
+                         <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"/>
+                         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">Live Session Secured</span>
+                      </div>
+                  </div>
               </div>
            </div>
         </div>
