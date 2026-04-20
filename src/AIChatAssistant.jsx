@@ -62,22 +62,7 @@ const AIChatAssistant = ({ currentProduct = null, allProducts = [], onClearConte
       }
     }
 
-    // 4. Dynamic Routing / No Context
-    // If no product is selected AND no product is detected in this message
-    if (!effectiveProduct && !detectedProduct) {
-      // Check if we already have a previous product in context from history
-      // (For now, if currentProduct is null and we didn't find one, we ask for clarification)
-      setIsLoading(true);
-      setTimeout(() => {
-        setMessages(prev => [...prev, { 
-          type: 'ai', 
-          text: "I'm ready to help! Which product would you like to discuss? (e.g., Coffee Maker, Smart Watch, or Running Shoe)" 
-        }]);
-        setIsLoading(false);
-      }, 600);
-      return;
-    }
-
+    // 4. Dynamic Routing / No Context (Handled automatically by backend now)
     setIsLoading(true);
 
     const requestBody = {
