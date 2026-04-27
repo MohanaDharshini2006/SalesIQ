@@ -28,16 +28,12 @@ app.use((req, res, next) => {
 
 // ─── POST /api/connect-store ────────────────────────────────────────────────
 app.post('/api/connect-store', (req, res) => {
-  const { storeDomain, accessToken } = req.body;
+  const { storeDomain } = req.body;
   if (!storeDomain || typeof storeDomain !== 'string' || !storeDomain.includes('.myshopify.com')) {
     return res.status(400).json({ error: 'Valid store domain ending in .myshopify.com is required' });
   }
-  if (!accessToken || !accessToken.startsWith('shpat_')) {
-    return res.status(400).json({ error: 'Valid Shopify Admin API Token starting with shpat_ is required' });
-  }
   sessions.connected = true;
   sessions.storeDomain = storeDomain;
-  sessions.accessToken = accessToken;
   res.json({ success: true, store: storeDomain });
 });
 

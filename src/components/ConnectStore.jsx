@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 
 export const ConnectStore = ({ onConnect }) => {
   const [domain, setDomain] = useState('');
-  const [token, setToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [disconnectedMsg, setDisconnectedMsg] = useState(false);
@@ -16,8 +15,8 @@ export const ConnectStore = ({ onConnect }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!domain || !token) {
-      setError('Store domain and Admin API token are both required');
+    if (!domain) {
+      setError('Store domain is required');
       return;
     }
     
@@ -29,7 +28,7 @@ export const ConnectStore = ({ onConnect }) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ storeDomain: domain, accessToken: token }),
+        body: JSON.stringify({ storeDomain: domain }),
       });
       
       const data = await res.json();
@@ -84,16 +83,6 @@ export const ConnectStore = ({ onConnect }) => {
               placeholder="my-store.myshopify.com" 
               value={domain} 
               onChange={e => setDomain(e.target.value)}
-              style={{ width: '100%', padding: '14px 16px', boxSizing: 'border-box', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: 'white', fontSize: '15px', outline: 'none', transition: 'border-color 0.2s' }}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Shopify Admin API Token</label>
-            <input 
-              type="password" 
-              placeholder="shpat_..." 
-              value={token} 
-              onChange={e => setToken(e.target.value)}
               style={{ width: '100%', padding: '14px 16px', boxSizing: 'border-box', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: 'white', fontSize: '15px', outline: 'none', transition: 'border-color 0.2s' }}
             />
           </div>

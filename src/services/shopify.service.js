@@ -3,7 +3,7 @@ import { sessions } from '../config/session.js';
 
 const getConfig = () => ({
   domain: sessions.storeDomain,
-  token: sessions.accessToken || process.env.SHOPIFY_ACCESS_TOKEN
+  token: process.env.SHOPIFY_ACCESS_TOKEN
 });
 
 const normalizeProducts = (products) =>
