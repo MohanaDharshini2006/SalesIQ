@@ -1,12 +1,19 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import apiRoutes from './src/routes/index.js';
-
-dotenv.config();
+import { sessions } from './src/config/session.js';
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
+
+console.log('--- StoreIQ Environment Check ---');
+console.log('GROQ_API_KEY:', process.env.GROQ_API_KEY ? 'Present (starts with ' + process.env.GROQ_API_KEY.substring(0, 7) + ')' : 'MISSING');
+console.log('GEMINI_API_KEY:', process.env.VITE_GEMINI_API_KEY ? 'Present (starts with ' + process.env.VITE_GEMINI_API_KEY.substring(0, 7) + ')' : 'MISSING');
+console.log('SHOPIFY_STORE:', process.env.SHOPIFY_STORE_DOMAIN || 'MISSING');
+console.log('---------------------------------');
 
 app.use(cors({ origin: '*' }));
 app.use(express.json());
@@ -18,6 +25,41 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+// ─── POST /api/connect-store ────────────────────────────────────────────────
+app.post('/api/connect-store', (req, res) => {
+  const { storeDomain } = req.body;
+  if (!storeDomain || typeof storeDomain !== 'string' || !storeDomain.includes('.myshopify.com')) {
+    return res.status(400).json({ error: 'Valid store domain ending in .myshopify.com is required' });
+  }
+  sessions.connected = true;
+  sessions.storeDomain = storeDomain;
+  res.json({ success: true, store: storeDomain });
+});
+
+// ─── GET /api/connection-status ──────────────────────────────────────────────
+app.get('/api/connection-status', (req, res) => {
+  res.json({
+    connected: sessions.connected,
+    store: sessions.storeDomain
+  });
+});
+
+app.post('/api/disconnect-store', (req, res) => {
+  sessions.connected = false;
+  sessions.storeDomain = null;
+  res.json({ success: true });
+});
+
+function requireConnection(req, res, next) {
+  if (req.path === '/disconnect-store') return next();
+  if (!sessions.connected) {
+    return res.status(401).json({ error: "Store not connected" });
+  }
+  next();
+}
+
+app.use('/api', requireConnection);
 
 // API routes
 app.use('/api', apiRoutes);
@@ -51,8 +93,8 @@ app.post('/api/chat', async (req, res) => {
       .map(m => `${m.type === 'user' ? 'User' : 'AI'}: ${m.text}`)
       .join('\n');
 
-    const system = `You are StoreIQ — an expert AI assistant for Shopify store optimization.
-You are talking to the store owner and helping them improve product scores and sales.
+    const system = `You are an AI ecommerce consultant.
+You analyze store data and provide actionable business advice to improve AI visibility, conversions, and trust.
 
 CURRENTLY FOCUSED PRODUCT:
 ${JSON.stringify(currentProduct, null, 2)}
@@ -64,12 +106,9 @@ CONVERSATION HISTORY:
 ${historyContext || 'First message'}
 
 YOUR RULES:
-- Be conversational, friendly, and specific. Use the actual data above.
-- If they ask about a product, reference its real score, gaps, and suggest specific fixes.
-- If they ask to fix/improve something, give a concrete rewrite or step-by-step plan.
-- Use bullet points (- item) for clarity. No asterisks (**). No markdown headers.
-- Keep answers focused and under 200 words unless a detailed breakdown is asked.
-- Always tie advice back to real product metrics from the data above.`;
+- Clear advice
+- Prioritized recommendations
+- No generic chatbot replies`;
 
     const response = await requestAI(message.trim(), system, false);
     const clean = response

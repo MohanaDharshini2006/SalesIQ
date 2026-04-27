@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { sessions } from '../config/session.js';
 
 const getConfig = () => ({
-  domain: process.env.SHOPIFY_STORE_DOMAIN,
+  domain: sessions.storeDomain,
   token: process.env.SHOPIFY_ACCESS_TOKEN
 });
 

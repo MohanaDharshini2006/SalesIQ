@@ -44,22 +44,23 @@ export const requestAI = async (prompt, systemPrompt = 'You are a helpful assist
         })
       });
 
-      const data = await res.json();
-
-      if (res.status === 429) {
-        console.warn('[AI] Groq quota hit — switching to Gemini fallback...');
-      } else if (!res.ok) {
-        console.warn('[AI] Groq error:', data.error?.message || res.status);
-      } else if (data.choices?.[0]?.message?.content) {
-        console.log('[AI] ✅ Groq responded');
-        return data.choices[0].message.content;
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        console.error(`[AI] Groq failed (${res.status}):`, data.error?.message || 'Unknown error');
+      } else {
+        const data = await res.json();
+        if (data.choices?.[0]?.message?.content) {
+          console.log('[AI] ✅ Groq responded');
+          return data.choices[0].message.content;
+        }
       }
     } catch (e) {
-      console.warn('[AI] Groq network error:', e.message);
+      console.warn('[AI] Groq connection error:', e.message);
     }
   }
 
-  // ── 2. Fallback: Gemini 1.5 Flash (most generous free quota) ─────────────────
+  // ── 2. Fallback: Gemini 1.5 Flash ──────────────────────────────────────────
+  console.log('[AI] Attempting Gemini fallback...');
   const gemKey = process.env.VITE_GEMINI_API_KEY;
   if (gemKey) {
     try {
@@ -73,11 +74,11 @@ export const requestAI = async (prompt, systemPrompt = 'You are a helpful assist
       console.log('[AI] ✅ Gemini Flash responded (fallback)');
       return text;
     } catch (e) {
-      console.warn('[AI] Gemini fallback error:', e.message);
+      console.error('[AI] Gemini fallback failed:', e.message);
     }
   }
 
-  throw new Error('Both Groq and Gemini APIs are unavailable. Check your API keys in .env');
+  throw new Error('Both Groq and Gemini APIs are unavailable. Please check your API keys and quotas.');
 };
 
 // ─── Batch Product Perception ──────────────────────────────────────────────────

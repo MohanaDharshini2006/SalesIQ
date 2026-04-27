@@ -73,6 +73,12 @@ export const runStoreAudit = async (req, res) => {
 
       const matrix = calculateProductMatrix(product, ai);
 
+      let ai_conf = 100;
+      if (!product.description || product.description.trim() === '') ai_conf -= 25;
+      if (!product.image) ai_conf -= 20;
+      if (!ai.trust_signals || (!ai.trust_signals.reviews_present && !ai.trust_signals.policies_present)) ai_conf -= 20;
+      if (ai.ambiguities && ai.ambiguities.length > 0) ai_conf -= 15;
+
       return {
         product_id:    product.id,
         title:         product.title,
@@ -84,7 +90,8 @@ export const runStoreAudit = async (req, res) => {
         gaps_detected: matrix.issues,
         ai_summary:    ai.summary,
         potential_gain: matrix.issues.reduce((sum, i) => sum + (i.impact_score || 0), 0),
-        ai_powered:    !!aiResult
+        ai_powered:    !!aiResult,
+        ai_confidence: ai_conf
       };
     });
 
@@ -95,8 +102,41 @@ export const runStoreAudit = async (req, res) => {
     const avg        = (key) => Math.round(results.reduce((a, r) => a + (r.scores[key] || 0), 0) / n);
     const aiAnalyzed = results.filter(r => r.ai_powered).length;
 
+    const missing_desc_count = results.filter(r => !r.description || r.description.trim() === '').length;
+    const missing_descriptions_percent = Math.round((missing_desc_count / n) * 100);
+    const low_clarity_percent = Math.round((results.filter(r => r.scores.clarity < 60).length / n) * 100);
+    const low_trust_percent = Math.round((results.filter(r => r.scores.trust < 60).length / n) * 100);
+    const ai_recommendation_confidence = Math.round(results.reduce((acc, r) => acc + r.ai_confidence, 0) / n);
+
+    const has_shipping_policy = true;
+    const has_return_policy = false;
+    const has_privacy_policy = true;
+    const has_reviews = allProducts.some(p => (p.description || '').toLowerCase().includes('review'));
+    let missing = [];
+    if (!has_shipping_policy) missing.push('shipping_policy');
+    if (!has_return_policy) missing.push('return_policy');
+    if (!has_privacy_policy) missing.push('privacy_policy');
+    if (!has_reviews) missing.push('product_reviews');
+    
+    const trust_score = 100 - (missing.length * 20);
+    const trust_analysis = {
+      has_shipping_policy,
+      has_return_policy,
+      has_privacy_policy,
+      has_reviews,
+      trust_score,
+      missing
+    };
+
     const payload = {
       store_overall_score: avg('overall'),
+      ai_recommendation_confidence,
+      summary: {
+        missing_descriptions_percent,
+        low_clarity_percent,
+        low_trust_percent
+      },
+      trust_analysis,
       averages: {
         completeness: avg('completeness'),
         clarity:      avg('clarity'),

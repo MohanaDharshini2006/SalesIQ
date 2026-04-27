@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { PerceptionModal } from './components/PerceptionModal.jsx';
+import { ConnectStore } from './components/ConnectStore.jsx';
+import { StoreSummary } from './components/StoreSummary.jsx';
+import { TrustPanel } from './components/TrustPanel.jsx';
+import { ProtectedRoute } from './components/ProtectedRoute.jsx';
 
 const API = 'http://localhost:3001/api';
 
@@ -172,6 +176,16 @@ const ProductCard = ({ product, onDiagnose, onPerception, index }) => {
           ))}
         </div>
 
+        <div style={{ marginTop: '16px', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '6px', color: 'rgba(255,255,255,0.7)' }}>
+            <span>AI Confidence</span>
+            <span style={{ fontWeight: '600', color: product.ai_confidence >= 70 ? '#10B981' : product.ai_confidence >= 40 ? '#F59E0B' : '#EF4444' }}>{product.ai_confidence || 0}%</span>
+          </div>
+          <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px' }}>
+            <div style={{ width: `${product.ai_confidence || 0}%`, height: '100%', borderRadius: '3px', background: product.ai_confidence >= 70 ? '#10B981' : product.ai_confidence >= 40 ? '#F59E0B' : '#EF4444' }} />
+          </div>
+        </div>
+
         {gapCount > 0 && (
           <div className="product-card-gaps">
             {product.gaps_detected.slice(0, 3).map((g, i) => (
@@ -219,9 +233,8 @@ const ChatAssistant = ({ storeData }) => {
   }, [open]);
 
   const quickPrompts = [
-    'What products need the most improvement?',
-    'How can I improve my store score?',
-    'Which products have missing info?',
+    'How to improve my store score?',
+    'Why is my AI confidence low?',
   ];
 
   const send = async (text = input) => {
@@ -278,7 +291,7 @@ const ChatAssistant = ({ storeData }) => {
               <span style={{ width: 20, height: 20 }}>{Icon.bot}</span>
             </div>
             <div>
-              <div className="chat-win-title">StoreIQ Assistant</div>
+              <div className="chat-win-title">AI Store Consultant</div>
               <div className="chat-win-status">
                 <div className="chat-online-dot" />
                 Powered by AI
@@ -533,6 +546,13 @@ const Dashboard = ({ storeData, onDiagnose, onPerception, loading }) => {
 
   return (
     <div className="dashboard">
+      <StoreSummary data={{
+        overall_score: storeData.store_overall_score,
+        ai_recommendation_confidence: storeData.ai_recommendation_confidence,
+        summary: storeData.summary
+      }} />
+      <TrustPanel data={storeData.trust_analysis} />
+
       {/* Store Overview */}
       <div className="overview-card">
         <div className="overview-left">
@@ -671,6 +691,27 @@ export default function App() {
   const [perceptionProduct, setPerceptionProduct] = useState(null);
   const [history, setHistory] = useState([]);
   const [auditError, setAuditError] = useState(null);
+  const [route, setRoute] = useState('/dashboard');
+  const [storeDomain, setStoreDomain] = useState(null);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
+
+  const navigate = (path) => {
+    setRoute(path);
+  };
+
+  const handleSignOut = async () => {
+    if (!window.confirm("Are you sure you want to disconnect your store?")) return;
+    setIsDisconnecting(true);
+    try {
+      await fetch('http://localhost:3001/api/disconnect-store', { method: 'POST' });
+    } catch (e) {}
+    localStorage.removeItem('storeiq_session');
+    localStorage.setItem('storeiq_disconnected', 'true');
+    setStoreDomain(null);
+    setStoreData(null);
+    setIsDisconnecting(false);
+    navigate('/connect');
+  };
 
   const runAudit = useCallback(async () => {
     setLoading(true);
@@ -719,9 +760,14 @@ export default function App() {
     setActiveProduct(null);
   }, [storeData]);
 
+  if (route === '/connect') {
+    return <ConnectStore onConnect={(store) => { setStoreDomain(store); navigate('/dashboard'); }} />;
+  }
+
   return (
-    <div className="app">
-      {/* Background Orbs */}
+    <ProtectedRoute onNotConnected={() => navigate('/connect')} onConnected={(store) => setStoreDomain(store)}>
+      <div className="app">
+        {/* Background Orbs */}
       <div className="bg-orb orb-1" />
       <div className="bg-orb orb-2" />
       <div className="bg-orb orb-3" />
@@ -766,6 +812,43 @@ export default function App() {
               <div className="store-info-label">Store Health</div>
             </div>
           )}
+          
+          {/* Sign Out Button (Sidebar) */}
+          {storeDomain && (
+            <button 
+              onClick={handleSignOut}
+              disabled={isDisconnecting}
+              style={{
+                width: '100%',
+                marginBottom: '12px',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                color: '#FCA5A5',
+                padding: '10px 16px',
+                borderRadius: '12px',
+                border: '1px solid rgba(239, 68, 68, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                fontSize: '13px',
+                fontWeight: '500',
+                cursor: isDisconnecting ? 'not-allowed' : 'pointer',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseOver={(e) => !isDisconnecting && (e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.2)')}
+              onMouseOut={(e) => !isDisconnecting && (e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)')}
+            >
+              {isDisconnecting ? (
+                 <div style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ width: 16, height: 16 }}>
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+              )}
+              {isDisconnecting ? 'Disconnecting...' : 'Sign Out'}
+            </button>
+          )}
+
           <div className="sidebar-groq-badge">
             <div className="groq-dot" />
             AI Connected
@@ -788,6 +871,12 @@ export default function App() {
             </p>
           </div>
           <div className="topbar-actions">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginRight: '16px', padding: '8px 12px', borderRadius: '20px', background: storeDomain ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', border: `1px solid ${storeDomain ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}` }}>
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: storeDomain ? '#10B981' : '#EF4444', boxShadow: `0 0 8px ${storeDomain ? '#10B981' : '#EF4444'}` }} />
+              <span style={{ fontSize: '13px', fontWeight: '500', color: storeDomain ? '#10B981' : '#EF4444' }}>
+                {storeDomain ? `Connected: ${storeDomain}` : 'Not Connected'}
+              </span>
+            </div>
             {auditError && (
               <div className="audit-error">⚠ {auditError}</div>
             )}
@@ -837,5 +926,6 @@ export default function App() {
         />
       )}
     </div>
+    </ProtectedRoute>
   );
 }
