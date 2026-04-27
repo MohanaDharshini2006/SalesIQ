@@ -11,6 +11,7 @@
 4. [Detailed API Specifications](#4-detailed-api-specifications)
 5. [Hardware & Service Requirements](#5-hardware--service-requirements)
 6. [Local Setup & Environment Config](#6-local-setup--environment-config)
+7. [Production Deployment (Vercel & Render)](#7-production-deployment-vercel--render)
 
 ---
 
@@ -160,3 +161,29 @@ All internal API queries are handled through `http://localhost:3001/api/`.
     npm run dev
     ```
     Navigate to `http://localhost:5173` to interact with the application safely.
+
+---
+
+## 7. Production Deployment (Vercel & Render)
+
+StoreIQ is built with a decoupled architecture, making it perfectly suited for modern cloud hosting.
+
+### Phase 1: Deploy Backend (Node.js/Express) to Render
+1. Connect your repository to **Render.com** and create a new **Web Service**.
+2. Set Build Command to `npm install` and Start Command to `node server.js`.
+3. Add your Environment Variables:
+   * `GROQ_API_KEY`
+   * `VITE_GEMINI_API_KEY`
+   * `SHOPIFY_ACCESS_TOKEN`
+4. Deploy and copy your new live URL (e.g., `https://salesiq-backend.onrender.com`).
+
+### Phase 2: Link Frontend to Live Backend
+In your local code, update the API pointer to point to the live server.
+1. Open `src/App.jsx` and `src/components/ConnectStore.jsx`.
+2. Change `const API = 'http://localhost:3001/api';` to your new Render URL `const API = 'https://salesiq-backend.onrender.com/api';`.
+3. Commit and push this change.
+
+### Phase 3: Deploy Frontend (React) to Vercel
+1. Connect your repository to **Vercel.com** and import the project.
+2. Vercel will auto-detect Vite. Ensure the build command is `npm run build`.
+3. Click **Deploy**. Vercel will instantly generate a live, secure HTTPS URL for your application interface.
