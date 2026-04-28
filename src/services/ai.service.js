@@ -45,10 +45,15 @@ export const requestAI = async (prompt, systemPrompt = "You are a helpful assist
         })
       });
       const data = await res.json();
-      if (data.choices?.[0]?.message?.content) {
+      if (!res.ok) {
+        console.warn('[AI] Groq API error:', data.error?.message || data.error);
+      } else if (data.choices?.[0]?.message?.content) {
+        console.log('[AI] Response via Groq');
         return data.choices[0].message.content;
       }
-    } catch (e) { console.warn('[AI] Groq failed, trying Gemini...'); }
+    } catch (e) {
+      console.warn('[AI] Groq network failure:', e.message);
+    }
   }
 
   // 2. Try Gemini (Free/Pro)
@@ -56,7 +61,7 @@ export const requestAI = async (prompt, systemPrompt = "You are a helpful assist
   if (geminiKey) {
     try {
       const genAI = new GoogleGenerativeAI(geminiKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
       const result = await model.generateContent(systemPrompt + '\n\n' + prompt);
       const text = await result.response.text();
       console.log('[AI] Response via Gemini');

@@ -27,30 +27,32 @@ app.post('/api/chat', async (req, res) => {
   const { message, context } = req.body;
   try {
     const { requestAI } = await import('./src/services/ai.service.js');
-    const system = `You are the StoreIQ Audit Consultant. 
+    const system = `You are an AI assistant for an e-commerce audit dashboard (StoreIQ).
+Your role: Help merchants understand their store scores in a conversational way.
 
-    FORMATTING COMMANDS:
-    1. NEVER use asterisks (*) or stars ever.
-    2. NEVER use markdown like # or **.
-    3. Use ONLY PLAIN TEXT and NUMBERED LISTS (1., 2., 3.).
-    4. For headers, use ALL CAPS labels.
+IMPORTANT BEHAVIOR RULES:
+1. If the user greets (hi, hello, hey):
+→ Respond with a SHORT friendly greeting only
+→ Do NOT explain scores
+Example: "Hi! 👋 I can help explain your audit results or suggest improvements."
 
-    RESPONSE STRUCTURE:
-    ANALYSIS REPORT FOR [PRODUCT]:
-    1. OVERALL SCORE: X
-    2. PILLAR BREAKDOWN:
-       - COMPLETENESS: score
-       - CLARITY: score
-       - VISIBILITY: score
-       - TRUST: score
-    3. VERIFIED GAPS: (List only exact gap types from data)
+2. If the user asks vague questions (e.g., "help", "what is this"):
+→ Give a short explanation of what you do
 
-    PRIORITY ACTION STEPS:
-    1. HIGH PRIORITY: (Specific fix)
-    2. PROJECTED LIFT: +X points
+3. ONLY give full audit explanation IF user asks:
+- "explain my score"
+- "why is trust low"
+- "how to improve"
+- or similar specific queries
 
-    DATA SOURCE (SCANNED):
-    ${JSON.stringify(context?.full_results)}`;
+4. Keep responses SHORT by default
+→ Do NOT generate long reports unless explicitly asked
+
+5. Be conversational, not like a report generator
+
+Context:
+Store Overall Score: ${context?.score || 'N/A'}
+Store Data/Products: ${JSON.stringify(context?.full_results)}`;
     
     const response = await requestAI(message, system);
     // Bulletproof Filter: Physically strip ALL asterisks from the response before sending
