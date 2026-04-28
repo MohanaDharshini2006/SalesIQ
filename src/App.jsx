@@ -1,4 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { PerceptionModal } from './components/PerceptionModal.jsx';
+import { ConnectStore } from './components/ConnectStore.jsx';
+import { StoreSummary } from './components/StoreSummary.jsx';
+import { TrustPanel } from './components/TrustPanel.jsx';
+import { ProtectedRoute } from './components/ProtectedRoute.jsx';
 
 const API = 'http://localhost:3001/api';
 
@@ -32,8 +37,13 @@ const ChatConcierge = ({ storeData }) => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef(null);
+  const inputRef = useRef(null);
 
-  useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [messages, open]);
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, loading]);
 
   const send = async (textOverride) => {
     const userText = textOverride || input;
@@ -58,8 +68,11 @@ const ChatConcierge = ({ storeData }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userText, context: { score: storeData?.store_overall_score || 0, count: storeData?.total_products || 0, full_results: storeContext } })
       });
+
       const data = await res.json();
-      setMessages(prev => [...prev, { role: 'ai', text: data.response }]);
+
+      if (!res.ok) throw new Error(data.error || 'Server error');
+      setMessages(prev => [...prev, { role: 'ai', text: data.text || 'No response from AI.' }]);
     } catch (e) {
       setMessages(prev => [...prev, { role: 'ai', text: "Connection error. Please try again." }]);
     }
@@ -183,18 +196,45 @@ export default function App() {
   const [storeData, setStoreData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [activeProduct, setActiveProduct] = useState(null);
-  const [fixData, setFixData] = useState(null);
+  const [perceptionProduct, setPerceptionProduct] = useState(null);
   const [history, setHistory] = useState([]);
+  const [auditError, setAuditError] = useState(null);
+  const [route, setRoute] = useState('/dashboard');
+  const [storeDomain, setStoreDomain] = useState(null);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
 
-  const runAudit = async () => {
+  const navigate = (path) => {
+    setRoute(path);
+  };
+
+  const handleSignOut = async () => {
+    if (!window.confirm("Are you sure you want to disconnect your store?")) return;
+    setIsDisconnecting(true);
+    try {
+      await fetch('http://localhost:3001/api/disconnect-store', { method: 'POST' });
+    } catch (e) {}
+    localStorage.removeItem('storeiq_session');
+    localStorage.setItem('storeiq_disconnected', 'true');
+    setStoreDomain(null);
+    setStoreData(null);
+    setIsDisconnecting(false);
+    navigate('/connect');
+  };
+
+  const runAudit = useCallback(async () => {
     setLoading(true);
+    setAuditError(null);
     try {
       const r = await fetch(`${API}/audit/store`, { method: 'POST' });
       const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Audit failed');
       setStoreData(d);
-    } catch (e) { alert('Audit failed'); }
+      setPage('dashboard');
+    } catch (e) {
+      setAuditError(e.message);
+    }
     setLoading(false);
-  };
+  }, []);
 
   const onDiagnose = async (product) => {
     setActiveProduct(product); setFixData(null);
@@ -237,6 +277,58 @@ export default function App() {
             </button>
           ))}
         </nav>
+
+        <div className="sidebar-footer">
+          {storeData && (
+            <div className="sidebar-store-info">
+              <div className="store-info-score" style={{ color: scoreColor(storeData.store_overall_score) }}>
+                {storeData.store_overall_score}%
+              </div>
+              <div className="store-info-label">Store Health</div>
+            </div>
+          )}
+          
+          {/* Sign Out Button (Sidebar) */}
+          {storeDomain && (
+            <button 
+              onClick={handleSignOut}
+              disabled={isDisconnecting}
+              style={{
+                width: '100%',
+                marginBottom: '12px',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                color: '#FCA5A5',
+                padding: '10px 16px',
+                borderRadius: '12px',
+                border: '1px solid rgba(239, 68, 68, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                fontSize: '13px',
+                fontWeight: '500',
+                cursor: isDisconnecting ? 'not-allowed' : 'pointer',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseOver={(e) => !isDisconnecting && (e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.2)')}
+              onMouseOut={(e) => !isDisconnecting && (e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)')}
+            >
+              {isDisconnecting ? (
+                 <div style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ width: 16, height: 16 }}>
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+              )}
+              {isDisconnecting ? 'Disconnecting...' : 'Sign Out'}
+            </button>
+          )}
+
+          <div className="sidebar-groq-badge">
+            <div className="groq-dot" />
+            AI Connected
+          </div>
+        </div>
       </aside>
 
       {/* Main Content */}
@@ -250,7 +342,8 @@ export default function App() {
             <button onClick={runAudit} disabled={loading} className="px-4 py-2.5 rounded-[12px] text-sm font-medium text-[#191B1C] bg-[#EDEFF0] hover:bg-[#d6d8d9] transition-all shadow-[0_4px_10px_rgba(0,0,0,0.2)] disabled:bg-[#2a2d2e] disabled:text-[#777] disabled:shadow-none">
               {loading ? 'Running audit...' : 'Run new audit'}
             </button>
-          </header>
+          </div>
+        </header>
 
           {loading ? (
             <div className="flex flex-col items-center justify-center py-32 text-slate-400 gap-4">
@@ -435,5 +528,6 @@ export default function App() {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
       `}} />
     </div>
+    </ProtectedRoute>
   );
 }
