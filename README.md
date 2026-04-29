@@ -12,7 +12,7 @@
 5. [Hardware & Service Requirements](#5-hardware--service-requirements)
 6. [Local Setup & Environment Config](#6-local-setup--environment-config)
 7. [Data Persistence & ROI Tracking](#7-data-persistence--roi-tracking)
-8. [Production Deployment (Vercel, Render & MongoDB Atlas)](#8-production-deployment-vercel-render--mongodb-atlas)
+8. [AI Chat Assistant (Store Consultant)](#8-ai-chat-assistant-store-consultant)
 
 ---
 
@@ -189,32 +189,15 @@ StoreIQ utilizes **MongoDB** to provide long-term value tracking for merchants. 
 
 ---
 
-## 8. Production Deployment (Vercel, Render & MongoDB Atlas)
+## 8. AI Chat Assistant (Store Consultant)
 
-StoreIQ is built with a decoupled architecture, making it perfectly suited for modern cloud hosting.
+The platform features an advanced, contextual **AI Chat Assistant** designed to act as a specialized e-commerce consultant rather than a generic chatbot.
 
-### Phase 1: Setup Database (MongoDB Atlas)
-1. Create a free cluster on **MongoDB Atlas**.
-2. Create a Database User and whitelist `0.0.0.0/0` (or the Render IP range) in Network Access.
-3. Copy the Connection String (SRV).
+### Core Capabilities:
+*   **Smart Product Identification:** The AI uses a fuzzy keyword matching algorithm to identify which product the merchant is asking about, even if they use colloquial terms (e.g., matching "skincare serum" to "Hydrating Serum for Radiant Skin").
+*   **Context-Aware Advice:** The chat session is dynamically fed the full store's audit data. If a user asks about a product, the AI instantly knows its current score, its missing trust signals, and its descriptive gaps.
+*   **Actionable Gap Explanation:** Instead of technical jargon, the AI explains issues in plain English (e.g., "Customers can't read what it does" instead of "missing_description").
+*   **SEO Recommendations:** When discussing products, the AI automatically generates 3-5 highly relevant SEO keywords to help merchants improve organic visibility.
+*   **Conversational Logic:** The system prompt is engineered to handle natural greetings casually while reserving deep data analysis only for when the merchant explicitly asks for business or product advice.
 
-### Phase 2: Deploy Backend (Node.js/Express) to Render
-1. Connect your repository to **Render.com** and create a new **Web Service**.
-2. Set Build Command to `npm install` and Start Command to `node server.js`.
-3. Add your Environment Variables:
-   * `GROQ_API_KEY`
-   * `VITE_GEMINI_API_KEY`
-   * `SHOPIFY_ACCESS_TOKEN`
-   * `MONGO_URI` (Paste your Atlas string here)
-4. Deploy and copy your new live URL (e.g., `https://salesiq-backend.onrender.com`).
-
-### Phase 3: Link Frontend to Live Backend
-In your local code, update the API pointer to point to the live server.
-1. Open `src/App.jsx` and `src/components/ConnectStore.jsx`.
-2. Change `const API = 'http://localhost:3001/api';` to your new Render URL `const API = 'https://salesiq-backend.onrender.com/api';`.
-3. Commit and push this change.
-
-### Phase 4: Deploy Frontend (React) to Vercel
-1. Connect your repository to **Vercel.com** and import the project.
-2. Vercel will auto-detect Vite. Ensure the build command is `npm run build`.
-3. Click **Deploy**. Vercel will instantly generate a live, secure HTTPS URL for your application interface.
+This chat layer transforms the raw audit data into interactive, easy-to-understand coaching, ensuring merchants always know exactly what to fix first.
