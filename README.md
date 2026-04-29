@@ -206,10 +206,17 @@ This chat layer transforms the raw audit data into interactive, easy-to-understa
 
 ---
 
-## 9. Demo Video & Walkthrough
+## 9. Demo Video & Product Walkthrough
 
 *   **Demo Video:** [Insert YouTube or Google Drive link here]
-*   **Screenshots:** [Insert link to screenshots or product walkthrough here]
+
+### Step-by-Step Product Walkthrough
+1. **Store Connection:** The merchant arrives at the landing page and inputs their `.myshopify.com` domain. The system securely authenticates with the backend without exposing keys.
+2. **Global Store Dashboard:** The user is greeted by the Store Dashboard, which displays aggregated metrics including the *Overall Health Score*, *AI Confidence Average*, and a breakdown of missing descriptions, clarity issues, and trust signals across the entire catalog.
+3. **Product Diagnosis:** The user clicks the **"Diagnose"** button on a specific poorly-scoring product. This opens the **Perception Engine** modal.
+4. **AI Perception Analysis:** Inside the modal, the merchant views the AI's breakdown of *Merchant Intent vs Buyer Perception*. The system clearly highlights missing fields, ambiguities, and contradictions in the existing description.
+5. **AI Chat Consultant:** If the merchant needs specific advice, they can open the **StoreIQ Assistant** chat. By typing something like *"what should I change for the snowboard?"*, the AI dynamically reads the store context, identifies the product using fuzzy matching, and replies with actionable, plain-English advice and SEO keywords.
+6. **Auto-Fix & Sync:** The merchant clicks **"Auto-Fix"** to let the generative AI rewrite the product description, fixing all identified gaps. Finally, clicking **"Apply Fix to Shopify"** instantly pushes the optimized description live to their Shopify store via the secure backend integration.
 
 ---
 
