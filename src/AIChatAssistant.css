@@ -32,7 +32,7 @@
 }
 
 .ai-chat-button.active {
-  background: #1e293b;
+  background: #0a0a0a;
   transform: rotate(90deg);
 }
 
@@ -71,14 +71,14 @@
 .ai-chat-window {
   width: 400px;
   height: 600px;
-  background: rgba(15, 23, 42, 0.85);
+  background: rgba(0, 0, 0, 0.97);
   backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
   display: flex;
   flex-direction: column;
   margin-bottom: 20px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
   overflow: hidden;
   transform-origin: bottom right;
   animation: chatOpen 0.5s cubic-bezier(0.16, 1, 0.3, 1);
@@ -336,7 +336,7 @@
 }
 
 .ai-chat-input-wrapper {
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   display: flex;
@@ -347,7 +347,7 @@
 
 .ai-chat-input-wrapper:focus-within {
   border-color: #6366f1;
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(0, 0, 0, 0.8);
   box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
 }
 

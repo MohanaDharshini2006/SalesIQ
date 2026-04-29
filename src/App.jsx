@@ -4,6 +4,7 @@ import { ConnectStore } from './components/ConnectStore.jsx';
 import { StoreSummary } from './components/StoreSummary.jsx';
 import { TrustPanel } from './components/TrustPanel.jsx';
 import { ProtectedRoute } from './components/ProtectedRoute.jsx';
+import { HistoryDashboard } from './components/HistoryDashboard.jsx';
 
 const API = 'http://localhost:3001/api';
 
@@ -689,7 +690,6 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [activeProduct, setActiveProduct] = useState(null);
   const [perceptionProduct, setPerceptionProduct] = useState(null);
-  const [history, setHistory] = useState([]);
   const [auditError, setAuditError] = useState(null);
   const [route, setRoute] = useState('/dashboard');
   const [storeDomain, setStoreDomain] = useState(null);
@@ -729,6 +729,9 @@ export default function App() {
   }, []);
 
   const applyFix = useCallback(async (productId, fix) => {
+    const product = storeData.results.find(p => String(p.product_id) === String(productId));
+    const after = Math.min((product?.total_score || 60) + 22, 98);
+
     const r = await fetch(`${API}/update-product`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -736,21 +739,17 @@ export default function App() {
         product_id: String(productId),
         fixed_title: fix.fixed_title,
         fixed_description: fix.fixed_description,
-        seo_keywords: fix.seo_keywords
+        seo_keywords: fix.seo_keywords,
+        original_title: product?.title,
+        original_description: product?.description,
+        before_score: product?.total_score,
+        after_score: after,
+        ai_model_used: 'groq'
       })
     });
     const d = await r.json();
     if (!d.success) throw new Error(d.error);
 
-    const product = storeData.results.find(p => String(p.product_id) === String(productId));
-    const after = Math.min((product?.total_score || 60) + 22, 98);
-    setHistory(h => [{
-      id: Date.now(),
-      title: product?.title || 'Unknown Product',
-      date: new Date().toLocaleDateString(),
-      score_before: product?.total_score || 0,
-      score_after: after,
-    }, ...h]);
     setStoreData(prev => ({
       ...prev,
       results: prev.results.map(p =>
@@ -796,9 +795,6 @@ export default function App() {
             >
               <span className="nav-icon">{item.icon}</span>
               <span>{item.label}</span>
-              {item.id === 'history' && history.length > 0 && (
-                <span className="nav-badge">{history.length}</span>
-              )}
             </button>
           ))}
         </nav>
@@ -899,7 +895,7 @@ export default function App() {
             <Dashboard storeData={storeData} onDiagnose={setActiveProduct} onPerception={setPerceptionProduct} loading={loading} />
           )}
           {page === 'history' && (
-            <HistoryPage history={history} />
+            <HistoryDashboard storeDomain={storeDomain} />
           )}
         </div>
       </main>

@@ -4,7 +4,9 @@ import './AIChatAssistant.css';
 
 const AIChatAssistant = ({ currentProduct = null, allProducts = [], onClearContext, onProductSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState([
+    { type: 'ai', text: '👋 Hey! I\'m your StoreIQ AI assistant. Ask me anything — about your products, scores, or how to improve your store. I\'m here to help!' }
+  ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
@@ -48,10 +50,15 @@ const AIChatAssistant = ({ currentProduct = null, allProducts = [], onClearConte
       currentMsg = messages[messages.length -1].text;
     }
     
-    // 1 & 2. Product Detection & Switching
-    const detectedProduct = allProducts.find(p => 
-      currentMsg.toLowerCase().includes(p.title.toLowerCase())
-    );
+    // Smart fuzzy product detection — checks meaningful keywords from titles
+    const stopWords = new Set(['the', 'and', 'for', 'with', 'from', 'that', 'this', 'are', 'was', 'its']);
+    const msgWords = currentMsg.toLowerCase().split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w));
+
+    const detectedProduct = allProducts.find(p => {
+      const titleWords = p.title.toLowerCase().split(/[\s:&-]+/).filter(w => w.length > 2 && !stopWords.has(w));
+      const matchCount = titleWords.filter(tw => msgWords.some(mw => tw.includes(mw) || mw.includes(tw))).length;
+      return matchCount >= 1; // at least one meaningful keyword match
+    });
 
     let effectiveProduct = currentProduct;
     if (detectedProduct) {
@@ -70,7 +77,8 @@ const AIChatAssistant = ({ currentProduct = null, allProducts = [], onClearConte
       price: effectiveProduct?.price ? effectiveProduct.price.replace('$', '') : null,
       message: currentMsg,
       image: effectiveProduct?.image,
-      products: allProducts, // Send all products for entity identification
+      products: allProducts,
+      productNames: allProducts.map(p => p.title), // help AI identify products by keyword
       history: messages.filter(m => 
         m.text !== 'AI response failed. Please try again.' && 
         !m.text.includes('SYNC_COMPLETE') &&
@@ -184,7 +192,7 @@ const AIChatAssistant = ({ currentProduct = null, allProducts = [], onClearConte
             <div className="ai-chat-input-wrapper">
               <input 
                 type="text" 
-                placeholder="Query system..."
+                placeholder="Ask me anything about your store..."
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}

@@ -10,10 +10,10 @@ export const PerceptionModal = ({ product, onClose, onFixTrigger }) => {
         const r = await fetch('http://localhost:3001/api/perception-analysis', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ products: [product] })
+          body: JSON.stringify({ product })
         });
         const d = await r.json();
-        setAnalysis(d.products[0]);
+        setAnalysis(d);
       } catch (e) {
         console.error(e);
       }

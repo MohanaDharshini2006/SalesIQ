@@ -1,8 +1,10 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_MODEL = 'llama-3.3-70b-versatile';
-const GEM_MODEL  = 'gemini-1.5-flash'; // generous free tier: 15 RPM / 1M tokens/day
+const GROQ_URL    = 'https://api.groq.com/openai/v1/chat/completions';
+const GROQ_MODEL  = 'llama-3.3-70b-versatile';   // primary
+const GROQ_LITE   = 'llama-3.1-8b-instant';       // lightweight fallback (fewer tokens)
+// Gemini model candidates — tried in order in case one is deprecated
+const GEM_MODELS  = ['gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-flash-001'];
 
 // ─── JSON Cleaner ──────────────────────────────────────────────────────────────
 const safeParseJSON = (raw) => {
@@ -25,57 +27,65 @@ const safeParseJSON = (raw) => {
 // ─── Core Requester (Groq → Gemini cascade) ───────────────────────────────────
 export const requestAI = async (prompt, systemPrompt = 'You are a helpful assistant.', jsonMode = false) => {
 
-  // ── 1. Try Groq ──────────────────────────────────────────────────────────────
+  // ── 1. Try Groq (primary: llama-3.3-70b) ────────────────────────────────────
   const groqKey = process.env.GROQ_API_KEY;
   if (groqKey) {
-    try {
-      const res = await fetch(GROQ_URL, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: GROQ_MODEL,
-          messages: [
-            { role: 'system', content: systemPrompt + (jsonMode ? ' IMPORTANT: Reply with ONLY valid JSON, no prose.' : '') },
-            { role: 'user',   content: prompt }
-          ],
-          response_format: jsonMode ? { type: 'json_object' } : undefined,
-          temperature: jsonMode ? 0.1 : 0.7,
-          max_tokens: 2048
-        })
-      });
+    for (const model of [GROQ_MODEL, GROQ_LITE]) {
+      try {
+        const res = await fetch(GROQ_URL, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model,
+            messages: [
+              { role: 'system', content: systemPrompt + (jsonMode ? ' IMPORTANT: Reply with ONLY valid JSON, no prose.' : '') },
+              { role: 'user',   content: prompt }
+            ],
+            response_format: jsonMode ? { type: 'json_object' } : undefined,
+            temperature: jsonMode ? 0.1 : 0.7,
+            max_tokens: 2048
+          })
+        });
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        console.error(`[AI] Groq failed (${res.status}):`, data.error?.message || 'Unknown error');
-      } else {
-        const data = await res.json();
-        if (data.choices?.[0]?.message?.content) {
-          console.log('[AI] ✅ Groq responded');
-          return data.choices[0].message.content;
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          console.error(`[AI] Groq (${model}) failed (${res.status}):`, data.error?.message || 'Unknown error');
+          // If rate-limited (429) on this model, try next Groq model
+          if (res.status === 429) continue;
+        } else {
+          const data = await res.json();
+          if (data.choices?.[0]?.message?.content) {
+            console.log(`[AI] ✅ Groq responded (${model})`);
+            return data.choices[0].message.content;
+          }
         }
+      } catch (e) {
+        console.warn(`[AI] Groq (${model}) connection error:`, e.message);
       }
-    } catch (e) {
-      console.warn('[AI] Groq connection error:', e.message);
     }
   }
 
-  // ── 2. Fallback: Gemini 1.5 Flash ──────────────────────────────────────────
+  // ── 2. Fallback: Gemini (tries multiple model names) ─────────────────────────
   console.log('[AI] Attempting Gemini fallback...');
   const gemKey = process.env.VITE_GEMINI_API_KEY;
   if (gemKey) {
-    try {
-      const genAI = new GoogleGenerativeAI(gemKey);
-      const model = genAI.getGenerativeModel({ model: GEM_MODEL });
-      const fullPrompt = jsonMode
-        ? `${systemPrompt}\n\nIMPORTANT: Return ONLY valid JSON.\n\nUser: ${prompt}`
-        : `${systemPrompt}\n\nUser: ${prompt}`;
-      const result = await model.generateContent(fullPrompt);
-      const text = await result.response.text();
-      console.log('[AI] ✅ Gemini Flash responded (fallback)');
-      return text;
-    } catch (e) {
-      console.error('[AI] Gemini fallback failed:', e.message);
+    for (const gemModel of GEM_MODELS) {
+      try {
+        const genAI = new GoogleGenerativeAI(gemKey);
+        const model = genAI.getGenerativeModel({ model: gemModel });
+        const fullPrompt = jsonMode
+          ? `${systemPrompt}\n\nIMPORTANT: Return ONLY valid JSON.\n\nUser: ${prompt}`
+          : `${systemPrompt}\n\nUser: ${prompt}`;
+        const result = await model.generateContent(fullPrompt);
+        const text = await result.response.text();
+        console.log(`[AI] ✅ Gemini responded via fallback (${gemModel})`);
+        return text;
+      } catch (e) {
+        console.warn(`[AI] Gemini (${gemModel}) failed:`, e.message);
+        // try next model in list
+      }
     }
+    console.error('[AI] All Gemini models failed.');
   }
 
   throw new Error('Both Groq and Gemini APIs are unavailable. Please check your API keys and quotas.');

@@ -8,19 +8,19 @@
 }
 
 :root {
-  --bg: #012A4A;
-  --bg-dark: #011E36;
-  --surface: #013A63;
-  --surface-hover: #01497C;
-  --border: #014F86;
-  --border-hover: #2C7DA0;
+  --bg: #000000;
+  --bg-dark: #000000;
+  --surface: #0d0d0d;
+  --surface-hover: #1a1a1a;
+  --border: #262626;
+  --border-hover: #404040;
   --primary: #468FAF;
-  --primary-glow: rgba(70, 143, 175, 0.4);
-  --primary-light: #2A6F97;
+  --primary-glow: rgba(70, 143, 175, 0.35);
+  --primary-light: #111111;
   --accent: #61A5C2;
   --text: #FFFFFF;
-  --text-muted: #A9D6E5;
-  --text-dim: #89C2D9;
+  --text-muted: #a0a0a0;
+  --text-dim: #707070;
   --success: #10B981;
   --warning: #F59E0B;
   --danger: #EF4444;
@@ -61,19 +61,19 @@ html, body, #root {
 }
 .orb-1 {
   width: 600px; height: 600px;
-  background: radial-gradient(circle, rgba(70, 143, 175,0.12), transparent 70%);
+  background: radial-gradient(circle, rgba(70, 143, 175,0.05), transparent 70%);
   top: -200px; right: -100px;
   animation-delay: 0s;
 }
 .orb-2 {
   width: 500px; height: 500px;
-  background: radial-gradient(circle, rgba(97, 165, 194,0.08), transparent 70%);
+  background: radial-gradient(circle, rgba(97, 165, 194,0.04), transparent 70%);
   bottom: -150px; left: 200px;
   animation-delay: -4s;
 }
 .orb-3 {
   width: 400px; height: 400px;
-  background: radial-gradient(circle, rgba(16,185,129,0.06), transparent 70%);
+  background: radial-gradient(circle, rgba(16,185,129,0.03), transparent 70%);
   top: 40%; left: 40%;
   animation-delay: -8s;
 }
@@ -90,7 +90,7 @@ html, body, #root {
   flex-direction: column;
   padding: 24px 16px;
   border-right: 1px solid var(--border);
-  background: rgba(1, 42, 74,0.8);
+  background: rgba(0, 0, 0, 0.95);
   backdrop-filter: blur(20px);
   z-index: 10;
   position: relative;
@@ -269,7 +269,7 @@ html, body, #root {
   justify-content: space-between;
   padding: 20px 32px;
   border-bottom: 1px solid var(--border);
-  background: rgba(1, 42, 74,0.5);
+  background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(12px);
   flex-shrink: 0;
 }
@@ -514,8 +514,8 @@ html, body, #root {
   align-items: flex-start;
   gap: 12px;
   padding: 14px 16px;
-  background: rgba(70, 143, 175,0.06);
-  border: 1px solid rgba(70, 143, 175,0.15);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
 }
 
@@ -693,14 +693,14 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(70, 143, 175,0.04);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .product-card-score-badge {
   position: absolute;
   bottom: 10px;
   right: 10px;
-  background: rgba(1, 42, 74,0.85);
+  background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 8px;
@@ -894,15 +894,15 @@ html, body, #root {
   right: 28px;
   width: 380px;
   height: 520px;
-  background: rgba(1, 42, 74,0.96);
+  background: rgba(0, 0, 0, 0.98);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(70, 143, 175,0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
   display: flex;
   flex-direction: column;
   z-index: 999;
   overflow: hidden;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(70, 143, 175,0.1);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.9), 0 0 0 1px rgba(255, 255, 255, 0.05);
   animation: chat-slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -1128,7 +1128,7 @@ html, body, #root {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(1, 42, 74,0.9);
+  background: rgba(0, 0, 0, 0.92);
   backdrop-filter: blur(10px);
   z-index: 2000;
   display: flex;
@@ -1139,8 +1139,8 @@ html, body, #root {
 }
 
 .modal-container {
-  background: var(--bg);
-  border: 1px solid rgba(70, 143, 175,0.2);
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
   width: 100%;
   max-width: 900px;
@@ -1351,8 +1351,8 @@ html, body, #root {
   letter-spacing: -0.3px;
   color: var(--text);
   padding: 14px 16px;
-  background: rgba(70, 143, 175,0.06);
-  border: 1px solid rgba(70, 143, 175,0.15);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
 }
 
@@ -1533,7 +1533,7 @@ html, body, #root {
 .perception-trigger-btn {
   width: 100%;
   padding: 10px;
-  background: rgba(1, 58, 99, 0.4);
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border);
   border-radius: 12px;
   color: var(--text-muted);
@@ -1549,7 +1549,7 @@ html, body, #root {
 }
 
 .perception-trigger-btn:hover {
-  background: rgba(1, 73, 124, 0.6);
+  background: rgba(255, 255, 255, 0.07);
   border-color: var(--border-hover);
   color: var(--text);
   transform: translateY(-1px);
@@ -1582,13 +1582,13 @@ html, body, #root {
 }
 
 .intent-card {
-  background: rgba(70, 143, 175, 0.1);
-  border-color: rgba(70, 143, 175, 0.3);
+  background: rgba(70, 143, 175, 0.06);
+  border-color: rgba(70, 143, 175, 0.2);
 }
 
 .reality-card {
-  background: rgba(97, 165, 194, 0.1);
-  border-color: rgba(97, 165, 194, 0.3);
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .perception-card h5 {

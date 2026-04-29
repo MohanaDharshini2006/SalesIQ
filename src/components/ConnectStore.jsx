@@ -42,11 +42,11 @@ export const ConnectStore = ({ onConnect }) => {
   };
 
   return (
-    <div className="connect-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'rgba(10, 10, 15, 0.95)', padding: '20px', color: 'white', fontFamily: 'Inter, sans-serif' }}>
-      <div className="bg-orb orb-1" style={{ position: 'absolute', top: '10%', left: '20%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(16,185,129,0.15) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(40px)' }} />
-      <div className="bg-orb orb-2" style={{ position: 'absolute', bottom: '10%', right: '20%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(99,102,241,0.1) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)' }} />
+    <div className="connect-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#000000', padding: '20px', color: 'white', fontFamily: 'Inter, sans-serif', position: 'relative', overflow: 'hidden' }}>
+      <div className="bg-orb orb-1" style={{ position: 'absolute', top: '10%', left: '20%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(16,185,129,0.06) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(40px)' }} />
+      <div className="bg-orb orb-2" style={{ position: 'absolute', bottom: '10%', right: '20%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(99,102,241,0.05) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)' }} />
       
-      <div className="connect-card" style={{ position: 'relative', zIndex: 10, background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(20px)', borderRadius: '24px', padding: '48px', width: '100%', maxWidth: '440px', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+      <div className="connect-card" style={{ position: 'relative', zIndex: 10, background: 'rgba(255, 255, 255, 0.04)', backdropFilter: 'blur(20px)', borderRadius: '24px', padding: '48px', width: '100%', maxWidth: '440px', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.9)' }}>
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '64px', height: '64px', borderRadius: '16px', background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', marginBottom: '24px', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)' }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '32px', height: '32px', color: 'white' }}>

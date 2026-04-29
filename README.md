@@ -6,12 +6,13 @@
 
 ## 📖 Complete Documentation Index
 1. [Platform Features & Product Capabilities](#1-platform-features--product-capabilities)
-2. [Technical Architecture & Scoring Models](#2-technical-architecture--scoring-models)
+2. [Technical Architecture & Persistence Layer](#2-technical-architecture--persistence-layer)
 3. [Security & Authentication Flow](#3-security--authentication-flow)
 4. [Detailed API Specifications](#4-detailed-api-specifications)
 5. [Hardware & Service Requirements](#5-hardware--service-requirements)
 6. [Local Setup & Environment Config](#6-local-setup--environment-config)
-7. [Production Deployment (Vercel & Render)](#7-production-deployment-vercel--render)
+7. [Data Persistence & ROI Tracking](#7-data-persistence--roi-tracking)
+8. [Production Deployment (Vercel, Render & MongoDB Atlas)](#8-production-deployment-vercel-render--mongodb-atlas)
 
 ---
 
@@ -45,24 +46,28 @@ Clicking **Auto-Fix** forces the AI to execute a rewrite targeting the gaps. Upo
 
 ---
 
-## 2. Technical Architecture & Scoring Models
+## 2. Technical Architecture & Persistence Layer
 
-StoreIQ operates as a decoupled React/Node stack heavily dependent on graceful AI failovers.
+StoreIQ operates as a decoupled React/Node stack heavily dependent on graceful AI failovers and persistent data tracking.
 
 ```mermaid
 graph TD
     UI[Frontend: React Dashboard] <--> |Session/REST| API[Backend: Express.js Node]
-    API --> Mem[In-Memory Session Store]
     
-    API -->|Fetch Catalog| SH[Shopify Admin API Auth]
-    SH --> API
+    subgraph Data Layer
+        API --> DB[(MongoDB Atlas)]
+        API --> Mem[In-Memory Session Store]
+    end
     
-    API --> |Context Batch| AI{LLM Failover Matrix}
-    AI --> |Attempt 1| Groq[Groq LLaMA 3.3 70B]
-    AI --> |HTTP 429 Cascade| Gem[Google Gemini 1.5 Flash]
+    subgraph External Services
+        API -->|Fetch Catalog| SH[Shopify Admin API Auth]
+        SH --> API
+        
+        API --> |Context Batch| AI{LLM Failover Matrix}
+        AI --> |Attempt 1| Groq[Groq LLaMA 3.3 70B]
+        AI --> |HTTP 429 Cascade| Gem[Google Gemini 1.5 Flash]
+    end
     
-    Groq --> API
-    Gem --> API
     API --> Logic[Deterministic Math & Trust Scoring]
     Logic --> UI
 ```
@@ -110,11 +115,11 @@ All internal API queries are handled through `http://localhost:3001/api/`.
 | `POST` | `/perception-analysis` | Analyzes Merchant Intent vs Buyer Perception to flag conversion blockers. |
 | `POST` | `/chat` | Continuous consultant loop constrained by strict ecommerce advising parameters. |
 
-### Operational Routes
+### Operational & Data Routes
 | Method | Endpoint | Description |
 |---|---|---|
 | `POST` | `/update-product` | Secure Shopify Sync initiator. Safely executes product overrides. |
-| `GET` | `/history` | Pulls the active session log mapping "Score Lift" from applied fixes. |
+| `GET` | `/history` | Pulls the persistent MongoDB session log mapping "Score Lift" from applied fixes. |
 
 ---
 
@@ -125,6 +130,7 @@ All internal API queries are handled through `http://localhost:3001/api/`.
 *   Min 512MB RAM available for Node process auditing arrays.
 
 **External Dependencies:**
+*   **MongoDB:** A MongoDB URI (local or Atlas) for persistent audit history.
 *   **Shopify Token:** Requires an Admin Custom App access token (`shpat_XXXXX`) tightly scoped to `read_products` and `write_products`. 
 *   **Groq Cloud:** Requires an active Developer API key. 
 *   **Google AI Studio:** (Recommended Fallback) Requires a Gemini API key for zero-downtime auditing during rate limits.
@@ -143,10 +149,18 @@ All internal API queries are handled through `http://localhost:3001/api/`.
     cp .env.example .env
     ```
     ```env
+    # AI Credentials
     GROQ_API_KEY=gsk_your_groq_key
     VITE_GEMINI_API_KEY=AI_your_gemini_key
+
+    # Shopify Auth
     SHOPIFY_ACCESS_TOKEN=shpat_your_secure_shopify_token
-    # Notice: SHOPIFY_STORE_DOMAIN is securely mapped dynamically via the Frontend UI now.
+
+    # Database (Persistence)
+    MONGO_URI=mongodb+srv://user:pass@cluster0.mongodb.net/storeiq?retryWrites=true&w=majority
+
+    # Environment
+    PORT=3001
     ```
 4.  **Launch the System Platforms:**
     Due to decoupling, launch both stacks concurrently in separate terminals:
@@ -164,26 +178,43 @@ All internal API queries are handled through `http://localhost:3001/api/`.
 
 ---
 
-## 7. Production Deployment (Vercel & Render)
+## 7. Data Persistence & ROI Tracking
+
+StoreIQ utilizes **MongoDB** to provide long-term value tracking for merchants. Unlike in-memory sessions that reset on server restart, the MongoDB integration ensures:
+
+1.  **Persistent Audit History:** Every "Apply Fix" action is logged with "Before" and "After" scores.
+2.  **Score Lift Analytics:** The system calculates the cumulative ROI of using StoreIQ by tracking how many "Health Points" have been added to the store catalog over time.
+3.  **Audit Versioning:** Merchants can review previous iterations of product descriptions to see the evolution of their store's clarity and trust signals.
+4.  **AI Performance Metrics:** Tracks which AI model (Groq vs Gemini) was used for each fix to monitor quality and latency across providers.
+
+---
+
+## 8. Production Deployment (Vercel, Render & MongoDB Atlas)
 
 StoreIQ is built with a decoupled architecture, making it perfectly suited for modern cloud hosting.
 
-### Phase 1: Deploy Backend (Node.js/Express) to Render
+### Phase 1: Setup Database (MongoDB Atlas)
+1. Create a free cluster on **MongoDB Atlas**.
+2. Create a Database User and whitelist `0.0.0.0/0` (or the Render IP range) in Network Access.
+3. Copy the Connection String (SRV).
+
+### Phase 2: Deploy Backend (Node.js/Express) to Render
 1. Connect your repository to **Render.com** and create a new **Web Service**.
 2. Set Build Command to `npm install` and Start Command to `node server.js`.
 3. Add your Environment Variables:
    * `GROQ_API_KEY`
    * `VITE_GEMINI_API_KEY`
    * `SHOPIFY_ACCESS_TOKEN`
+   * `MONGO_URI` (Paste your Atlas string here)
 4. Deploy and copy your new live URL (e.g., `https://salesiq-backend.onrender.com`).
 
-### Phase 2: Link Frontend to Live Backend
+### Phase 3: Link Frontend to Live Backend
 In your local code, update the API pointer to point to the live server.
 1. Open `src/App.jsx` and `src/components/ConnectStore.jsx`.
 2. Change `const API = 'http://localhost:3001/api';` to your new Render URL `const API = 'https://salesiq-backend.onrender.com/api';`.
 3. Commit and push this change.
 
-### Phase 3: Deploy Frontend (React) to Vercel
+### Phase 4: Deploy Frontend (React) to Vercel
 1. Connect your repository to **Vercel.com** and import the project.
 2. Vercel will auto-detect Vite. Ensure the build command is `npm run build`.
 3. Click **Deploy**. Vercel will instantly generate a live, secure HTTPS URL for your application interface.

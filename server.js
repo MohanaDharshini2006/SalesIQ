@@ -5,6 +5,9 @@ import express from 'express';
 import cors from 'cors';
 import apiRoutes from './src/routes/index.js';
 import { sessions } from './src/config/session.js';
+import { connectDB } from './src/config/db.js';
+
+connectDB();
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -67,7 +70,7 @@ app.use('/api', apiRoutes);
 
 // ─── POST /api/chat ─────────────────────────────────────────────────────────
 app.post('/api/chat', async (req, res) => {
-  const { message, title, price, products, history } = req.body;
+  const { message, title, price, products, productNames, history } = req.body;
 
   if (!message?.trim()) {
     return res.status(400).json({ error: 'Message is required' });
@@ -76,14 +79,14 @@ app.post('/api/chat', async (req, res) => {
   try {
     const { requestAI } = await import('./src/services/ai.service.js');
 
-    // Build compact store context (avoid token overflows)
-    const storeContext = (products || []).slice(0, 20).map(p => ({
+    // Build full store context
+    const storeContext = (products || []).slice(0, 25).map(p => ({
       title:       p.title,
       price:       p.price,
       total_score: p.total_score,
       scores:      p.scores,
       gaps:        (p.gaps_detected || []).map(g => g.type),
-      snippet:     (p.description || '').replace(/<[^>]*>/g, '').substring(0, 100)
+      snippet:     (p.description || '').replace(/<[^>]*>/g, '').substring(0, 150)
     }));
 
     const currentProduct = (products || []).find(p => p.title === title)
@@ -94,27 +97,56 @@ app.post('/api/chat', async (req, res) => {
       .map(m => `${m.type === 'user' ? 'User' : 'AI'}: ${m.text}`)
       .join('\n');
 
-    const system = `You are an AI ecommerce consultant.
-You analyze store data and provide actionable business advice to improve AI visibility, conversions, and trust.
+    const hasStoreData = storeContext.length > 0;
+    const allProductTitles = (productNames || storeContext.map(p => p.title)).join('\n- ');
 
-CURRENTLY FOCUSED PRODUCT:
-${JSON.stringify(currentProduct, null, 2)}
+    const system = `You are StoreIQ, a friendly and smart AI assistant for an e-commerce store.
 
-ALL PRODUCTS & SCORES:
+YOUR PERSONALITY:
+- Warm, conversational, and easy to understand.
+- For greetings (Hi, Hey, Hello) — just greet back simply and ask what they need.
+- For store/product questions — be specific, clear, and helpful using the actual store data.
+- Keep responses short and easy to read. Plain English only. No jargon.
+- Never use markdown headers or ** bold ** formatting.
+
+${hasStoreData ? `FULL STORE PRODUCT LIST (use this to identify what the user is asking about):
+- ${allProductTitles}
+
+FULL PRODUCT DATA (scores, gaps, descriptions):
 ${JSON.stringify(storeContext, null, 2)}
 
-CONVERSATION HISTORY:
-${historyContext || 'First message'}
+PRODUCT IDENTIFICATION RULES:
+- The user may refer to products using short names, categories, or keywords (e.g. "serum", "skincare", "running shoe", "snowboard").
+- You MUST scan the full product list above and match what the user means by keywords — even if they don't use the exact product name.
+- Example: if user says "skincare serum" and there is a product called "Hydrating Serum for Radiant Skin", match it and respond about that product.
+- Always state the full product name you matched so the user knows you found it.
+- If no product matches at all, say so clearly.
 
-YOUR RULES:
-- Clear advice
-- Prioritized recommendations
-- No generic chatbot replies`;
+WHEN ASKED ABOUT A PRODUCT — ALWAYS INCLUDE:
+1. Confirm which product you found (state its full name).
+2. Its current score out of 100 (from total_score).
+3. What issues the system found (from gaps array) — explain each in one plain sentence.
+4. 3-5 recommended SEO keywords for that product based on its name and category.
+5. The single most important thing to fix first.
+
+SEO KEYWORD FORMAT: Say "Good keywords to target: keyword1, keyword2, keyword3"
+Base keywords on what customers would actually search for this type of product.`
+: 'No store data loaded yet. Tell the user to click "Run AI Audit" first to scan their store.'}
+
+CONVERSATION SO FAR:
+${historyContext || 'Start of conversation.'}
+
+RESPONSE RULES:
+1. Greetings → short friendly reply only. Do NOT give product advice.
+2. Product questions → identify the product by keyword, give score, gaps explained simply, keyword suggestions, and top fix.
+3. General questions → answer simply and naturally.
+4. Keep it brief. One short paragraph or a compact list is enough.`;
 
     const response = await requestAI(message.trim(), system, false);
     const clean = response
       .replace(/\*\*/g, '')
       .replace(/^#+\s/gm, '')
+      .replace(/^\*\s/gm, '• ')
       .trim();
 
     res.json({ text: clean });
