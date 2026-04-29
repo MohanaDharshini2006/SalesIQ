@@ -13,6 +13,8 @@
 6. [Local Setup & Environment Config](#6-local-setup--environment-config)
 7. [Data Persistence & ROI Tracking](#7-data-persistence--roi-tracking)
 8. [AI Chat Assistant (Store Consultant)](#8-ai-chat-assistant-store-consultant)
+9. [Demo Video & Walkthrough](#9-demo-video--walkthrough)
+10. [Contribution Note](#10-contribution-note)
 
 ---
 
@@ -201,3 +203,21 @@ The platform features an advanced, contextual **AI Chat Assistant** designed to 
 *   **Conversational Logic:** The system prompt is engineered to handle natural greetings casually while reserving deep data analysis only for when the merchant explicitly asks for business or product advice.
 
 This chat layer transforms the raw audit data into interactive, easy-to-understand coaching, ensuring merchants always know exactly what to fix first.
+
+---
+
+## 9. Demo Video & Walkthrough
+
+*   **Demo Video:** [Insert YouTube or Google Drive link here]
+*   **Screenshots:** [Insert link to screenshots or product walkthrough here]
+
+---
+
+## 10. Contribution Note
+
+This project was built as a highly collaborative team effort, with both of us sharing equal responsibility across product strategy and engineering execution.
+
+*   **Ideation & Planning:** We began by jointly defining the problem statement, identifying target features, and mapping out the system architecture and user flow. Both of us actively shaped the core vision of the product.
+*   **Development & Execution:** To optimize our workflow, we divided the development tasks based on our individual technical strengths. However, the codebase reflects joint effort, as both team members contributed directly to writing, reviewing, and refining the code.
+*   **Integration & Problem-Solving:** Throughout the build phase, we maintained continuous communication. We regularly assisted each other during complex integrations, tackled bugs together, and iterated on the system design as a unified team.
+*   **Outcome:** We are proud to state that both members contributed equally to the final product's conceptualization and its technical reality.
