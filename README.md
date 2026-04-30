@@ -210,7 +210,7 @@ This chat layer transforms the raw audit data into interactive, easy-to-understa
 
 ## 9. Demo Video & Product Walkthrough
 
-*   **Demo Video:** [Insert YouTube or Google Drive link here]
+*   **Demo Video:** [Watch the StoreIQ Product Walkthrough](https://drive.google.com/file/d/1tPx2S3Bp7mHiVOtbwIfvcAm5pSqsrGeF/view?usp=sharing)
 
 ### Step-by-Step Product Walkthrough
 1. **Store Connection:** The merchant arrives at the landing page and inputs their `.myshopify.com` domain. The system securely authenticates with the backend without exposing keys.
