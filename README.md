@@ -2,6 +2,8 @@
 
 **StoreIQ** is an autonomous Shopify integration platform designed to close the gap between *what a merchant thinks they are selling* and *what a customer actually reads*. It combines robust deterministic modeling (scoring product structures) with advanced generative LLMs to perform full-store audits, assign perception priorities, conduct trust analysis, and act as a virtual ecommerce consultant—ultimately syncing conversion-optimized descriptions live to Shopify.
 
+**🚀 Live Demo:** [https://storeiq-9ttz.onrender.com](https://storeiq-9ttz.onrender.com)
+
 ---
 
 ## 📖 Complete Documentation Index
