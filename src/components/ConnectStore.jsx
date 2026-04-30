@@ -23,7 +23,7 @@ export const ConnectStore = ({ onConnect }) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('http://localhost:3001/api/connect-store', {
+      const res = await fetch('/api/connect-store', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

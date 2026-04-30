@@ -6,7 +6,7 @@ import { TrustPanel } from './components/TrustPanel.jsx';
 import { ProtectedRoute } from './components/ProtectedRoute.jsx';
 import { HistoryDashboard } from './components/HistoryDashboard.jsx';
 
-const API = 'http://localhost:3001/api';
+const API = '/api';
 
 // ─── Utility ──────────────────────────────────────────────────────────────────
 const scoreColor = (s) => {
@@ -703,7 +703,7 @@ export default function App() {
     if (!window.confirm("Are you sure you want to disconnect your store?")) return;
     setIsDisconnecting(true);
     try {
-      await fetch('http://localhost:3001/api/disconnect-store', { method: 'POST' });
+      await fetch('/api/disconnect-store', { method: 'POST' });
     } catch (e) {}
     localStorage.removeItem('storeiq_session');
     localStorage.setItem('storeiq_disconnected', 'true');

@@ -3,7 +3,12 @@ dotenv.config();
 
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import apiRoutes from './src/routes/index.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import { sessions } from './src/config/session.js';
 import { connectDB } from './src/config/db.js';
 
@@ -209,8 +214,14 @@ app.get('/health', (req, res) => {
   });
 });
 
-// ─── 404 catch-all ────────────────────────────────────────────────────────────
-app.use((req, res) => res.status(404).json({ error: `Route not found: ${req.method} ${req.path}` }));
+// ─── 404 catch-all FOR API ───────────────────────────────────────────────────
+app.use('/api', (req, res) => res.status(404).json({ error: `Route not found: ${req.method} ${req.path}` }));
+
+// ─── Frontend Serving ────────────────────────────────────────────────────────
+app.use(express.static(path.join(__dirname, 'dist')));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {

@@ -9,7 +9,7 @@ export default function ProductGrid({ products, onProductSelect, onUpdateProduct
     setDiagnosing(product.id);
     
     try {
-      const response = await fetch('http://localhost:3001/api/shopify/diagnose', {
+      const response = await fetch('/api/shopify/diagnose', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -15,8 +15,8 @@ export const HistoryDashboard = ({ storeDomain }) => {
     setLoading(true);
     try {
       const [histRes, statsRes] = await Promise.all([
-        fetch(`http://localhost:3001/api/history?store=${storeDomain}`),
-        fetch(`http://localhost:3001/api/history/stats?store=${storeDomain}`)
+        fetch(`/api/history?store=${storeDomain}`),
+        fetch(`/api/history/stats?store=${storeDomain}`)
       ]);
       const histData = await histRes.json();
       const statsData = await statsRes.json();

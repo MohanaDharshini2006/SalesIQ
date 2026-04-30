@@ -7,7 +7,7 @@ export const ProtectedRoute = ({ children, onNotConnected, onConnected }) => {
   useEffect(() => {
     let isMounted = true;
     
-    fetch('http://localhost:3001/api/connection-status')
+    fetch('/api/connection-status')
       .then(res => res.json())
       .then(data => {
         if (!isMounted) return;

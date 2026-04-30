@@ -89,7 +89,7 @@ const AIChatAssistant = ({ currentProduct = null, allProducts = [], onClearConte
     try {
       console.log(`[FRONTEND][REQUEST] | Product: ${requestBody.title} | Message: ${currentMsg}`);
       
-      const response = await fetch('http://localhost:3001/api/chat', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)

@@ -8,7 +8,7 @@ export async function generateProductDescription(product, isRetry = false) {
   try {
     console.log(`[FRONTEND][ANALYZE] ${isRetry ? 'RETRY' : 'INITIAL'} | Body:`, requestBody);
 
-    const response = await fetch('http://localhost:3001/api/analyze', {
+    const response = await fetch('/api/analyze', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
