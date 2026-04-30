@@ -219,7 +219,7 @@ app.use('/api', (req, res) => res.status(404).json({ error: `Route not found: ${
 
 // ─── Frontend Serving ────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'dist')));
-app.get('*', (req, res) => {
+app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
